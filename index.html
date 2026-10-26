@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+original_html = """<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -22,11 +22,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #f3f4f6; }
+        /* Fullscreen Overlay to hide Blogger Default UI */
         #app-wrapper {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             z-index: 999999; overflow: hidden; display: flex;
         }
+        /* Glassmorphism Classes */
         .glass {
             background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
@@ -36,14 +38,17 @@
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
+        /* Input styling */
         .glass-input {
             background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(200, 200, 200, 0.5); transition: all 0.3s ease;
         }
         .glass-input:focus {
             background: #ffffff; border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
+        /* Hide scrollbar but keep functionality */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Markdown Styles */
         .prose h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; margin-top: 1.5rem; color: #1e3a8a;}
         .prose h2 { font-size: 1.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem;}
         .prose h3 { font-size: 1.1rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: #374151;}
@@ -472,7 +477,7 @@
         // ==========================================
         
         // MASUKKAN URL WEB APP GAS ANDA DI SINI
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyEBewsJsUWBwHnAHxun6GqSd9cGBctYEHAJfSHLRR3mlrm7w2JtJ0RkyXv2pJ8RlED/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyyOn-lTKkunlQYf3STPIjkpd8UKesgzV2Zzs_acyEaiMxl1QU6f1vOYsk8dEzqGZlO/exec"; 
         
         let globalSettings = { gemini_api_key: "", identitas: {} };
         window.currentArchiveData = [];
@@ -767,7 +772,7 @@
             
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             const d = new Date(); 
-            const fallbackDate = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+            const fallbackDate = `${d.getDate()} ${monthNames[d.getMonth()} ${d.getFullYear()}`;
             
             const ttdTempat = identitas.tempat_ttd || '...................';
             const ttdTanggal = identitas.tanggal_ttd || fallbackDate;
@@ -1000,7 +1005,7 @@ C. Soal Evaluasi (Pilihan Ganda) (WAJIB berikan 10 Soal Pilihan Ganda A-D yang b
 ${instruksiDiferensiasiLKPD}`;
             
             try {
-                // UPDATE PENTING: Mengganti nama model menjadi gemini-1.5-flash-latest sesuai error
+                // UPDATE PENTING: Mengganti nama model menjadi gemini-1.5-pro sesuai error
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
