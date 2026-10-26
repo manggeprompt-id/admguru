@@ -1001,7 +1001,7 @@ ${instruksiDiferensiasiLKPD}`;
             
             try {
                 // UPDATE PENTING: Mengganti nama model menjadi gemini-1.5-flash-latest sesuai error
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
