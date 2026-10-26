@@ -3,23 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EduPlan AI - RPP Generator (GAS Version)</title>
+    <title>EduPlan AI - RPP Generator</title>
+    
+    <link id="pwa-manifest" rel="manifest" href="">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js for rendering Markdown from Gemini -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.css"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #f3f4f6; }
+        #app-wrapper {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            z-index: 999999; overflow: hidden; display: flex;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(200, 200, 200, 0.5); transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: #ffffff; border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .prose h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; margin-top: 1.5rem; color: #1e3a8a;}
+        .prose h2 { font-size: 1.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem;}
+        .prose h3 { font-size: 1.1rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: #374151;}
+        .prose p { margin-bottom: 0.75rem; line-height: 1.6;}
+        .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem;}
+        .prose ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem;}
+        .prose strong { font-weight: 600; color: #111827;}
+        .prose table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.875rem;}
+        .prose th, .prose td { border: 1px solid #d1d5db; padding: 0.5rem; text-align: left; }
+        .prose th { background-color: #f3f4f6; font-weight: 600; }
     </style>
 </head>
 <body>
     <div id="app-wrapper">
-        <!-- Struktur lengkap ada di versi sebelumnya -->
-        <h1 class="text-2xl p-4">EduPlan AI (GAS Version)</h1>
-        <p class="p-4">Silakan rujuk ke Code.gs dan panduan setup.</p>
-    </div>
-    <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwgKJUCyHxX7UVAIjv8IXk_umNfimEoTaQbsfLw3wCe7ecvrLvONN883sIIrXiVfxcz/exec"; 
         
+        <div id="login-screen" class="w-full h-full flex items-center justify-center absolute inset-0 z-50 bg-gray-50/50 backdrop-blur-sm">
+            <div class="glass-panel w-full max-w-md p-8 m-4">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg text-white text-2xl">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">EduPlan AI</h2>
+                    <p class="text-gray-500 text-sm mt-1">Sistem Generator RPP Khusus Admin</p>
+                </div>
+                
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Admin</label>
+                        <input type="email" id="login-email" required class="glass-input w-full px-4 py-2 rounded-lg" placeholder="admin@sekolah.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="login-password" required class="glass-input w-full px-4 py-2 rounded-lg" placeholder="••••••••">
+                    </div>
+                    <div id="login-error" class="hidden bg-red-100 text-red-600 p-3 rounded-lg text-sm text-center"></div>
+                    <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow transition duration-200">
+                        Masuk Sistem
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- MAIN APP -->
+        <div id="main-app" class="hidden w-full h-full flex flex-col md:flex-row">
+            
+            <!-- DESKTOP SIDEBAR -->
+            <nav class="hidden md:flex flex-col w-64 h-full glass border-r border-gray-200 p-4 shrink-0 shadow-sm relative z-20">
+                <div class="flex items-center gap-3 px-2 mb-8 mt-2">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-gray-800 tracking-tight">EduPlan AI</h1>
+                        <p class="text-xs text-gray-500">Admin Portal</p>
+                    </div>
+                </div>
+                
+                <div class="flex-1 space-y-2">
+                    <button onclick="navigate('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" data-target="dashboard">
+                        <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+                    </button>
+                    <button onclick="navigate('generator')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" data-target="generator">
+                        <i class="fa-solid fa-wand-magic-sparkles w-5"></i> Generator RPP
+                    </button>
+                    <button onclick="navigate('arsip')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" data-target="arsip">
+                        <i class="fa-solid fa-folder-open w-5"></i> Arsip RPP
+                    </button>
+                    <button onclick="navigate('pengaturan')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition" data-target="pengaturan">
+                        <i class="fa-solid fa-gear w-5"></i> Pengaturan
+                    </button>
+                </div>
+                <button id="btn-logout" class="w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg text-red-600 hover:bg-red-50 transition mt-auto">
+                    <i class="fa-solid fa-right-from-bracket w-5"></i> Keluar
+                </button>
+            </nav>
+            <!-- MOBILE BOTTOM NAV -->
+            <nav class="md:hidden fixed bottom-0 left-0 w-full glass border-t border-gray-200 flex justify-around p-2 z-50 pb-safe">
+                <button onclick="navigate('dashboard')" class="nav-btn-mobile flex flex-col items-center p-2 text-gray-500" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+                    <span class="text-[10px]">Dashboard</span>
+                </button>
+                <button onclick="navigate('generator')" class="nav-btn-mobile flex flex-col items-center p-2 text-gray-500" data-target="generator">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xl mb-1"></i>
+                    <span class="text-[10px]">Generator</span>
+                </button>
+                <button onclick="navigate('arsip')" class="nav-btn-mobile flex flex-col items-center p-2 text-gray-500" data-target="arsip">
+                    <i class="fa-solid fa-folder-open text-xl mb-1"></i>
+                    <span class="text-[10px]">Arsip</span>
+                </button>
+                <button onclick="navigate('pengaturan')" class="nav-btn-mobile flex flex-col items-center p-2 text-gray-500" data-target="pengaturan">
+                    <i class="fa-solid fa-gear text-xl mb-1"></i>
+                    <span class="text-[10px]">Pengaturan</span>
+                </button>
+            </nav>
+            <!-- CONTENT AREA -->
+            <main class="flex-1 h-full overflow-y-auto no-scrollbar p-4 md:p-8 pb-24 md:pb-8 relative z-10">
+                
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view-section h-full flex flex-col hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Statistik</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass-panel p-6 flex items-center gap-5 border-l-4 border-l-blue-500">
+                            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Total RPP Dibuat</p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-total-rpp">0</h3>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 flex items-center gap-5 border-l-4 border-l-green-500">
+                            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl">
+                                <i class="fa-solid fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Status API Gemini</p>
+                                <h3 class="text-lg font-bold text-gray-800 mt-1" id="stat-api-status">Belum Diatur</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 glass-panel p-6 flex-1">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Aktivitas Terakhir</h3>
+                        <div id="dashboard-recent-list" class="space-y-3">
+                            <p class="text-gray-500 text-sm">Belum ada aktivitas.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Generator View -->
+                <div id="view-generator" class="view-section hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Generator RPP berbasis AI</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- Form Input -->
+                        <div class="glass-panel p-6 overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
+                            <form id="generator-form" class="space-y-8">
+                                
+                                <!-- 1. Data Umum -->
+                                <div class="space-y-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">1. Data Umum</h3>
+                                        <p class="text-xs text-gray-500 mb-4">Informasi dasar modul pembelajaran</p>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran <span class="text-red-500">*</span></label>
+                                            <input type="text" id="gen-mapel" required class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="Contoh: Matematika">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenjang Pendidikan <span class="text-red-500">*</span></label>
+                                            <select id="gen-jenjang" required class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700">
+                                                <option value="" disabled selected>Pilih jenjang</option>
+                                                <option value="SD">SD / MI</option>
+                                                <option value="SMP">SMP / MTs</option>
+                                                <option value="SMA">SMA / MA</option>
+                                                <option value="SMK">SMK / MAK</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+                                            <input type="text" id="gen-kelas" required class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="Contoh: VII atau 10">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Fase <span class="text-red-500">*</span></label>
+                                            <select id="gen-fase" required class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700">
+                                                <option value="" disabled selected>Pilih fase</option>
+                                                <option value="A">Fase A (Kelas 1-2 SD)</option>
+                                                <option value="B">Fase B (Kelas 3-4 SD)</option>
+                                                <option value="C">Fase C (Kelas 5-6 SD)</option>
+                                                <option value="D">Fase D (Kelas 7-9 SMP)</option>
+                                                <option value="E">Fase E (Kelas 10 SMA/SMK)</option>
+                                                <option value="F">Fase F (Kelas 11-12 SMA/SMK)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                                            <select id="gen-semester" class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700">
+                                                <option value="" disabled selected>Pilih semester</option>
+                                                <option value="Ganjil">Ganjil</option>
+                                                <option value="Genap">Genap</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Pelajaran</label>
+                                            <input type="text" id="gen-tahun" class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="Contoh: 2025/2026">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Alokasi Waktu <span class="text-red-500">*</span></label>
+                                            <input type="text" id="gen-durasi" required class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="Contoh: 4 x 40 menit">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Pertemuan</label>
+                                            <select id="gen-pertemuan" class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700 mb-1">
+                                                <option value="1">1 Pertemuan</option>
+                                                <option value="2">2 Pertemuan</option>
+                                                <option value="3">3 Pertemuan</option>
+                                                <option value="4">4 Pertemuan</option>
+                                                <option value="5">5 Pertemuan</option>
+                                            </select>
+                                            <p class="text-[10px] text-gray-500 leading-tight">Maksimal 5 pertemuan agar proses AI stabil dan lengkap.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="border-gray-200">
+                                <!-- 2. Desain Pembelajaran -->
+                                <div class="space-y-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800">2. Desain Pembelajaran</h3>
+                                        <p class="text-xs text-gray-500 mb-4">Strategi dan tujuan pembelajaran</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Model Pembelajaran</label>
+                                        <select id="gen-model" class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700">
+                                            <option value="" disabled selected>Pilih model pembelajaran</option>
+                                            <option value="Problem Based Learning (PBL)">Problem Based Learning (PBL)</option>
+                                            <option value="Project Based Learning (PjBL)">Project Based Learning (PjBL)</option>
+                                            <option value="Discovery Learning">Discovery Learning</option>
+                                            <option value="Inquiry Learning">Inquiry Learning</option>
+                                            <option value="Cooperative Learning">Cooperative Learning</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Pendekatan Khusus (Opsional)</label>
+                                        <select id="gen-pendekatan" class="glass-input w-full px-4 py-2 rounded-lg text-sm text-gray-700 mb-1">
+                                            <option value="Standar">Standar (tanpa pendekatan khusus)</option>
+                                            <option value="TaRL">Teaching at the Right Level (TaRL)</option>
+                                            <option value="CRT">Culturally Responsive Teaching (CRT)</option>
+                                            <option value="Berdiferensiasi">Pembelajaran Berdiferensiasi</option>
+                                        </select>
+                                        <p class="text-[10px] text-gray-500 leading-tight mt-1">Mengikuti template RPM KEMENDIKDASMEN.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Topik Utama <span class="text-red-500">*</span></label>
+                                        <input type="text" id="gen-topik" required class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="Contoh: Persamaan Linear Satu Variabel">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tujuan Pembelajaran <span class="text-red-500">*</span></label>
+                                        <textarea id="gen-tujuan" required rows="3" class="glass-input w-full px-4 py-2 rounded-lg text-sm resize-none" placeholder="Tuliskan tujuan pembelajaran yang ingin dicapai secara mendetail..."></textarea>
+                                    </div>
+                                </div>
+                                <hr class="border-gray-200">
+                                <!-- 3. Dimensi Profil Lulusan -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-gray-800">3. Dimensi Profil Lulusan (DPL) <span class="text-red-500">*</span></h3>
+                                            <p class="text-xs text-gray-500">Pilih minimal 4 dari 8 dimensi</p>
+                                        </div>
+                                        <span id="dpl-counter" class="text-xs font-bold bg-red-500 text-white px-2 py-1 rounded-full">0/8 dipilih (min. 4)</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dpl-container">
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Keimanan dan Ketakwaan" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Keimanan dan Ketakwaan</span><span class="text-xs text-gray-500">Beriman kepada Tuhan YME</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Kewargaan" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Kewargaan</span><span class="text-xs text-gray-500">Berkebinekaan global</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Penalaran Kritis" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Penalaran Kritis</span><span class="text-xs text-gray-500">Berpikir logis & analitis</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Kreativitas" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Kreativitas</span><span class="text-xs text-gray-500">Karya inovatif</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Kolaborasi" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Kolaborasi</span><span class="text-xs text-gray-500">Kerja sama tim</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Kemandirian" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Kemandirian</span><span class="text-xs text-gray-500">Belajar mandiri</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Kesehatan" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Kesehatan</span><span class="text-xs text-gray-500">Fisik dan mental</span></div>
+                                        </label>
+                                        <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                            <div class="flex items-center h-5"><input type="checkbox" value="Komunikasi" class="w-4 h-4 text-blue-600 rounded dpl-checkbox"></div>
+                                            <div class="ms-3 text-sm"><span class="font-medium text-gray-900 block">Komunikasi</span><span class="text-xs text-gray-500">Secara efektif</span></div>
+                                        </label>
+                                    </div>
+                                    <p id="dpl-error" class="hidden text-xs text-red-500 font-medium">Pilih minimal 4 dimensi untuk melanjutkan.</p>
+                                </div>
+                                <button type="submit" id="btn-generate" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate RPP Sekarang
+                                </button>
+                            </form>
+                        </div>
+                        <!-- Result Area -->
+                        <div class="glass-panel p-6 flex flex-col h-[calc(100vh-150px)]">
+                            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 shrink-0">
+                                <h3 class="text-lg font-bold text-gray-800">Hasil Generator</h3>
+                                <div id="result-actions" class="hidden gap-2">
+                                    <button onclick="copyResult()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"><i class="fa-regular fa-copy"></i> Salin</button>
+                                    <button onclick="printRPP('current')" class="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-medium transition"><i class="fa-solid fa-print"></i> Cetak</button>
+                                    <button onclick="saveResult()" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-floppy-disk"></i> Simpan Arsip</button>
+                                </div>
+                            </div>
+                            
+                            <div id="generator-loader" class="hidden flex-1 flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                                <p class="text-sm font-medium text-blue-600 animate-pulse">Menyusun RPP super detail...</p>
+                                <p class="text-xs text-gray-400 mt-1">Mohon tunggu, proses ini memakan waktu 15-30 detik.</p>
+                            </div>
+                            <div id="generator-empty" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                                <i class="fa-solid fa-robot text-5xl mb-3 text-gray-300"></i>
+                                <p class="text-sm font-medium">Dokumen RPP akan muncul di sini</p>
+                            </div>
+                            <div id="generator-result" class="flex-1 overflow-y-auto no-scrollbar prose prose-sm max-w-none pb-8 hidden">
+                                <!-- Markdown content injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Arsip View -->
+                <div id="view-arsip" class="view-section hidden h-full flex flex-col">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Arsip RPP</h2>
+                    <div id="arsip-empty" class="flex-1 flex flex-col items-center justify-center text-gray-400 glass-panel">
+                        <i class="fa-solid fa-folder-open text-5xl mb-3 text-gray-300"></i>
+                        <p class="text-sm font-medium">Belum ada arsip RPP yang disimpan.</p>
+                    </div>
+                    <div id="arsip-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden pb-10">
+                        <!-- Cards Injected Here -->
+                    </div>
+                </div>
+                <!-- Pengaturan View -->
+                <div id="view-pengaturan" class="view-section hidden h-full">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Sistem</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
+                        <!-- API Key Card -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-key text-blue-500 mr-2"></i>Konfigurasi API</h3>
+                            <form id="form-settings" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Gemini API Key</label>
+                                    <input type="password" id="input-api-key" class="glass-input w-full px-4 py-2 rounded-lg text-sm" placeholder="AIzaSy...">
+                                    <p class="text-xs text-gray-500 mt-1">Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500 hover:underline">Google AI Studio</a>.</p>
+                                </div>
+                                <button type="submit" id="btn-save-settings" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition">Simpan API Key</button>
+                            </form>
+                        </div>
+                        <!-- Identitas Sekolah Card -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-school text-blue-500 mr-2"></i>Identitas Cetak</h3>
+                            <form id="form-identitas" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">URL Logo Sekolah (Opsional)</label>
+                                    <input type="url" id="set-logo" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="https://contoh.com/logo.png">
+                                    <p class="text-[10px] text-gray-500 mt-1">Gunakan link gambar langsung (contoh format: .png atau .jpg). Jika kosong, logo tidak akan dicetak.</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="col-span-1 md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Sekolah</label>
+                                        <input type="text" id="set-sekolah" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Misal: SMP Negeri 1 Cipta">
+                                    </div>
+                                    <div class="col-span-1 md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Sekolah</label>
+                                        <input type="text" id="set-alamat" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Misal: Jl. Pendidikan No 1, Kota Belajar">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kepsek</label>
+                                        <input type="text" id="set-kepsek" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Nama Kepala Sekolah">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">NIP Kepsek</label>
+                                        <input type="text" id="set-nip-kepsek" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="NIP Kepsek">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Guru</label>
+                                        <input type="text" id="set-guru" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Nama Anda (Penyusun)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">NIP Guru</label>
+                                        <input type="text" id="set-nip-guru" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="NIP Anda">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tempat Tanda Tangan</label>
+                                        <input type="text" id="set-tempat-ttd" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Misal: Jakarta">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Tanda Tangan</label>
+                                        <input type="text" id="set-tanggal-ttd" class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Misal: 17 Agustus 2026">
+                                    </div>
+                                </div>
+                                <button type="submit" id="btn-save-identitas" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition mt-4">Simpan Identitas</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <!-- RPP Viewer Modal -->
+        <div id="modal-view" class="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 id="modal-title" class="font-bold text-gray-800 text-lg">Detail RPP</h3>
+                    <div class="flex gap-2">
+                        <button onclick="printRPP('modal')" class="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-medium transition"><i class="fa-solid fa-print"></i> Cetak</button>
+                        <button onclick="copyModalContent()" class="p-2 text-gray-500 hover:text-blue-600 transition"><i class="fa-regular fa-copy text-lg"></i></button>
+                        <button onclick="closeModal()" class="p-2 text-gray-500 hover:text-red-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                </div>
+                <div id="modal-content" class="p-6 overflow-y-auto prose prose-sm max-w-none flex-1"></div>
+            </div>
+        </div>
+        <!-- Global Toast Notification -->
+        <div id="toast" class="fixed top-4 right-4 z-[999999] transform transition-all duration-300 translate-x-full opacity-0 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-lg border border-gray-100" role="alert">
+            <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg">
+                <i class="fa-solid fa-check-circle text-green-400 text-xl" id="toast-icon"></i>
+            </div>
+            <div class="ms-3 text-sm font-normal mr-2" id="toast-message">Pesan notifikasi</div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // INTEGRASI GOOGLE APPS SCRIPT (MENGGANTIKAN FIREBASE)
+        // ==========================================
+        
+        // MASUKKAN URL WEB APP GAS ANDA DI SINI
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzpIwktas5LupTpCV5k00y2cm2tEFQIWcZ1wBI3Z2l5fb4rg6qSJaMfsR0RkuUE6Ryv/exec"; 
+        
+        let globalSettings = { gemini_api_key: "", identitas: {} };
+        window.currentArchiveData = [];
+        let currentGeneratedRPP = null;
+        let currentGeneratedMeta = null;
+        let modalRawContent = null;
+
+        // Bantuan Fetch API ke GAS
         async function fetchGAS(payload) {
             try {
                 const response = await fetch(GAS_URL, {
@@ -32,8 +494,584 @@
                 throw error;
             }
         }
-        
-        // Cek koneksi API key dan logic lainnya
+
+        // --- SISTEM LOGIN ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login');
+            const err = document.getElementById('login-error');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true; err.classList.add('hidden');
+            
+            try {
+                const res = await fetchGAS({ action: 'login', email: email, password: pass });
+                if(res.status === 'success') {
+                    localStorage.setItem('auth_token', res.token);
+                    initAppSetup();
+                } else {
+                    err.innerText = res.message; err.classList.remove('hidden');
+                }
+            } catch(e) {
+                err.innerText = "Gagal terhubung ke server database (Pastikan URL GAS benar & tidak di-block CORS)."; 
+                err.classList.remove('hidden');
+            } finally {
+                btn.innerHTML = 'Masuk Sistem'; btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            location.reload();
+        });
+
+        window.onload = () => {
+            if(localStorage.getItem('auth_token')) {
+                initAppSetup();
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('main-app').classList.add('hidden');
+            }
+        };
+
+        async function initAppSetup() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            showToast("Mengambil data sistem...", "info");
+            await loadSettings();
+            navigate('dashboard');
+        }
+
+        // --- MANAJEMEN PENGATURAN & API KEY ---
+        async function loadSettings() {
+            try {
+                const res = await fetchGAS({ action: 'getSettings' });
+                if(res.status === 'success') {
+                    globalSettings = res.data;
+                    document.getElementById('input-api-key').value = globalSettings.gemini_api_key || "";
+                    
+                    const identitas = globalSettings.identitas || {};
+                    if(identitas.nama_sekolah) document.getElementById('set-sekolah').value = identitas.nama_sekolah;
+                    if(identitas.alamat) document.getElementById('set-alamat').value = identitas.alamat;
+                    if(identitas.nama_kepsek) document.getElementById('set-kepsek').value = identitas.nama_kepsek;
+                    if(identitas.nip_kepsek) document.getElementById('set-nip-kepsek').value = identitas.nip_kepsek;
+                    if(identitas.nama_guru) document.getElementById('set-guru').value = identitas.nama_guru;
+                    if(identitas.nip_guru) document.getElementById('set-nip-guru').value = identitas.nip_guru;
+                    if(identitas.logo) document.getElementById('set-logo').value = identitas.logo;
+                    if(identitas.tempat_ttd) document.getElementById('set-tempat-ttd').value = identitas.tempat_ttd;
+                    if(identitas.tanggal_ttd) document.getElementById('set-tanggal-ttd').value = identitas.tanggal_ttd;
+                }
+            } catch(e) { console.error("Gagal load pengaturan"); }
+        }
+
+        document.getElementById('form-settings').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const val = document.getElementById('input-api-key').value.trim();
+            const btn = document.getElementById('btn-save-settings');
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+            
+            try {
+                const res = await fetchGAS({ action: 'saveSettings', apiKey: val, identitas: globalSettings.identitas });
+                if(res.status === 'success') {
+                    globalSettings.gemini_api_key = val;
+                    showToast("API Key berhasil disimpan", "success");
+                }
+            } catch(err) { showToast("Gagal menyimpan", "error"); }
+            finally { btn.disabled = false; btn.innerText = "Simpan API Key"; }
+        });
+
+        document.getElementById('form-identitas').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-identitas');
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+            
+            const payload = {
+                nama_sekolah: document.getElementById('set-sekolah').value.trim(),
+                alamat: document.getElementById('set-alamat').value.trim(),
+                nama_kepsek: document.getElementById('set-kepsek').value.trim(),
+                nip_kepsek: document.getElementById('set-nip-kepsek').value.trim(),
+                nama_guru: document.getElementById('set-guru').value.trim(),
+                nip_guru: document.getElementById('set-nip-guru').value.trim(),
+                logo: document.getElementById('set-logo').value.trim(),
+                tempat_ttd: document.getElementById('set-tempat-ttd').value.trim(),
+                tanggal_ttd: document.getElementById('set-tanggal-ttd').value.trim()
+            };
+            
+            try {
+                const res = await fetchGAS({ action: 'saveSettings', apiKey: globalSettings.gemini_api_key, identitas: payload });
+                if(res.status === 'success') {
+                    globalSettings.identitas = payload;
+                    showToast("Identitas berhasil disimpan!", "success");
+                }
+            } catch(err) { showToast("Gagal menyimpan identitas", "error"); }
+            finally { btn.disabled = false; btn.innerText = "Simpan Identitas"; }
+        });
+
+        // --- DASHBOARD & ARSIP ---
+        async function loadDashboard() {
+            const apiStat = document.getElementById('stat-api-status');
+            if(globalSettings.gemini_api_key && globalSettings.gemini_api_key.length > 10) {
+                apiStat.innerText = "Terkonfigurasi"; apiStat.className = "text-lg font-bold text-green-600 mt-1";
+            } else {
+                apiStat.innerText = "Belum Diatur"; apiStat.className = "text-lg font-bold text-red-500 mt-1";
+            }
+            
+            try {
+                const res = await fetchGAS({ action: 'getArsip' });
+                if(res.status === 'success') {
+                    const dataList = res.data.reverse();
+                    document.getElementById('stat-total-rpp').innerText = dataList.length;
+                    
+                    const listEl = document.getElementById('dashboard-recent-list');
+                    listEl.innerHTML = '';
+                    if(dataList.length === 0) {
+                        listEl.innerHTML = '<p class="text-gray-500 text-sm">Belum ada RPP yang dibuat.</p>';
+                    } else {
+                        dataList.slice(0, 3).forEach(item => {
+                            listEl.innerHTML += `
+                                <div class="p-3 border border-gray-100 rounded-lg bg-white/60 flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-bold text-sm text-gray-800">${item.mata_pelajaran} - ${item.kelas}</h4>
+                                        <p class="text-xs text-gray-500 truncate w-48 md:w-64">${item.topik}</p>
+                                    </div>
+                                    <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">Selesai</span>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            } catch(e) { console.error("Gagal load dashboard"); }
+        }
+
+        async function loadArsip() {
+            try {
+                const res = await fetchGAS({ action: 'getArsip' });
+                if(res.status === 'success') {
+                    window.currentArchiveData = res.data.reverse(); 
+                    const container = document.getElementById('arsip-container');
+                    const emptyEl = document.getElementById('arsip-empty');
+                    
+                    container.innerHTML = '';
+                    if(window.currentArchiveData.length === 0) {
+                        container.classList.add('hidden');
+                        emptyEl.classList.remove('hidden');
+                    } else {
+                        container.classList.remove('hidden');
+                        emptyEl.classList.add('hidden');
+                        
+                        window.currentArchiveData.forEach((item, index) => {
+                            container.innerHTML += `
+                                <div class="glass-panel p-5 flex flex-col justify-between hover:shadow-lg transition border border-gray-200">
+                                    <div>
+                                        <div class="flex justify-between items-start mb-2">
+                                            <h4 class="font-bold text-gray-800 line-clamp-1">${item.mata_pelajaran} - ${item.kelas}</h4>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mb-4 line-clamp-2">${item.topik}</p>
+                                    </div>
+                                    <button onclick="viewModal(${index})" class="w-full py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-600 hover:text-white transition">Lihat Detail</button>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            } catch(e) { showToast("Gagal mengambil arsip", "error"); }
+        }
+
+        // --- NAVIGASI & UI ---
+        window.navigate = function(targetId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + targetId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === targetId) {
+                    btn.classList.add('bg-blue-50', 'text-blue-600');
+                    btn.classList.remove('text-gray-600');
+                } else {
+                    btn.classList.remove('bg-blue-50', 'text-blue-600');
+                    btn.classList.add('text-gray-600');
+                }
+            });
+            document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+                if(btn.dataset.target === targetId) {
+                    btn.classList.add('text-blue-600');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            if(targetId === 'dashboard') loadDashboard();
+            if(targetId === 'arsip') loadArsip();
+        };
+
+        window.showToast = function(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            
+            let icon = document.getElementById('toast-icon');
+            icon.className = '';
+            if(type === 'success') icon.className = 'fa-solid fa-check-circle text-green-400 text-xl';
+            else if(type === 'error') icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-xl';
+            else icon.className = 'fa-solid fa-info-circle text-blue-400 text-xl';
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        };
+
+        // --- MODAL & PRINT ---
+        window.viewModal = function(index) {
+            const item = window.currentArchiveData[index];
+            if(!item) return;
+            modalRawContent = item.konten_rpp; 
+            document.getElementById('modal-title').innerText = `${item.mata_pelajaran} - ${item.kelas}`;
+            document.getElementById('modal-content').innerHTML = marked.parse(item.konten_rpp);
+            document.getElementById('modal-view').classList.remove('hidden');
+        };
+        window.closeModal = function() {
+            document.getElementById('modal-view').classList.add('hidden');
+            modalRawContent = null;
+        };
+        window.copyModalContent = function() {
+            const content = document.getElementById('modal-content').innerText;
+            navigator.clipboard.writeText(content).then(()=> showToast("Isi disalin", "success"));
+        };
+        window.copyResult = function() {
+            if(currentGeneratedRPP) {
+                navigator.clipboard.writeText(currentGeneratedRPP).then(()=> showToast("Markdown disalin", "success"));
+            }
+        };
+
+        window.printRPP = async function(mode) {
+            const rawContent = mode === 'current' ? currentGeneratedRPP : modalRawContent;
+            if(!rawContent) { showToast("Tidak ada konten.", "error"); return; }
+            
+            showToast("Menyiapkan dokumen cetak...", "info");
+            const identitas = globalSettings.identitas || {};
+            let htmlContent = marked.parse(rawContent);
+            
+            // Regex Ekstraksi Meta
+            const extractMeta = (label, text) => {
+                const regex = new RegExp(`\\*\\s*${label}:\\s*(.*?)(?:\\n|$)`, 'i');
+                const match = text.match(regex);
+                return match && match[1] ? match[1].trim() : '.......................';
+            };
+            const mapel = extractMeta('Mata Pelajaran', rawContent);
+            const topik = extractMeta('Materi Pokok \\/ Topik', rawContent);
+            const kelas = extractMeta('Kelas \\/ Fase', rawContent);
+            const semester = extractMeta('Semester', rawContent);
+            const tahun = extractMeta('Tahun Pelajaran', rawContent);
+            const alokasi = extractMeta('Alokasi Waktu', rawContent);
+            const pertemuan = extractMeta('Jumlah Pertemuan', rawContent);
+            
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const d = new Date(); 
+            const fallbackDate = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+            
+            const ttdTempat = identitas.tempat_ttd || '...................';
+            const ttdTanggal = identitas.tanggal_ttd || fallbackDate;
+            
+            const signatureHtml = `
+                <div class="ttd-container">
+                    <div class="ttd-box">
+                        <p>Mengetahui,<br>Kepala Sekolah</p>
+                        <div class="ttd-space"></div>
+                        <p class="ttd-nama">${identitas.nama_kepsek || '(................................)'}</p>
+                        <p>NIP. ${identitas.nip_kepsek || '....................'}</p>
+                    </div>
+                    <div class="ttd-box">
+                        <p>${ttdTempat}, ${ttdTanggal}<br>Guru Mata Pelajaran</p>
+                        <div class="ttd-space"></div>
+                        <p class="ttd-nama">${identitas.nama_guru || '(................................)'}</p>
+                        <p>NIP. ${identitas.nip_guru || '....................'}</p>
+                    </div>
+                </div>
+            `;
+            
+            const lampiran1Regex = /(<h[1-3][^>]*>LAMPIRAN\s*1[^<]*<\/h[1-3]>)/i;
+            if (lampiran1Regex.test(htmlContent)) {
+                htmlContent = htmlContent.replace(lampiran1Regex, signatureHtml + '\n<div class="page-break"></div>\n$1');
+            } else {
+                htmlContent = htmlContent + signatureHtml;
+            }
+            htmlContent = htmlContent.replace(/(<h[1-3][^>]*>LAMPIRAN\s*[2-9][^<]*<\/h[1-3]>)/gi, '\n<div class="page-break"></div>\n$1');
+            
+            const coverTitle = "RENCANA PELAKSANAAN PEMBELAJARAN (RPP) <br> / MODUL AJAR";
+            const coverLogo = identitas.logo ? `<img src="${identitas.logo}" class="cover-logo">` : '';
+            const coverHtml = `
+                <div class="cover-page">
+                    ${coverLogo}
+                    <h1>${coverTitle}</h1>
+                    <div class="cover-mata-pelajaran">
+                        <h2>Mata Pelajaran: ${mapel}</h2>
+                        <p>Materi Pokok: ${topik}</p>
+                    </div>
+                    <div class="cover-info-table">
+                        <table>
+                            <tr><td>Kelas / Fase</td><td>: ${kelas}</td></tr>
+                            <tr><td>Semester</td><td>: ${semester}</td></tr>
+                            <tr><td>Tahun Pelajaran</td><td>: ${tahun}</td></tr>
+                            <tr><td>Alokasi Waktu</td><td>: ${alokasi}</td></tr>
+                            <tr><td>Pertemuan</td><td>: ${pertemuan}</td></tr>
+                        </table>
+                    </div>
+                    <div class="cover-details">
+                        <p><strong>Penyusun:</strong><br>${identitas.nama_guru || '................................'}</p>
+                        <p><strong>Sekolah:</strong><br>${identitas.nama_sekolah || '................................'}</p>
+                    </div>
+                </div>
+            `;
+            
+            let printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Cetak RPP - EduPlan AI</title>
+                    <style>
+                        @page { size: A4; margin: 2cm; }
+                        body { font-family: "Times New Roman", Times, serif; font-size: 12pt; line-height: 1.5; color: #000; }
+                        .cover-page { height: 95vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; page-break-after: always; }
+                        .cover-logo { width: 160px; height: 160px; object-fit: contain; margin-bottom: 30px; }
+                        .cover-page h1 { font-size: 22pt; margin-bottom: 40px; line-height: 1.5; font-weight: bold; }
+                        .cover-mata-pelajaran { margin-bottom: 30px; }
+                        .cover-mata-pelajaran h2 { font-size: 16pt; margin-bottom: 5px; text-transform: uppercase; border: none; padding: 0;}
+                        .cover-mata-pelajaran p { font-size: 14pt; font-weight: bold; margin: 0; }
+                        .cover-info-table { margin: 0 auto 50px auto; width: 60%; font-size: 14pt; text-align: left; }
+                        .cover-info-table table { border: none; margin-top: 0; margin-bottom: 0; box-shadow: none; }
+                        .cover-info-table td { border: none; padding: 5px 8px; font-weight: bold; background: transparent; vertical-align: middle; }
+                        .cover-info-table td:first-child { width: 45%; }
+                        .cover-details p { font-size: 14pt; line-height: 1.8; margin-bottom: 20px; }
+                        .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+                        .kop-logo { width: 90px; height: 90px; object-fit: contain; margin-right: 20px; flex-shrink: 0; }
+                        .kop-teks { flex: 1; text-align: center; margin-right: 110px; }
+                        .kop-teks h1 { font-size: 16pt; margin: 0; font-weight: bold; text-transform: uppercase; }
+                        .kop-teks p { font-size: 11pt; margin: 5px 0 0 0; }
+                        h1 { font-size: 14pt; text-align: center; font-weight: bold; margin-top: 20px; text-transform: uppercase;}
+                        h2 { font-size: 12pt; font-weight: bold; margin-top: 20px; border-bottom: 1px solid #000; padding-bottom: 3px;}
+                        h3 { font-size: 12pt; font-weight: bold; margin-top: 15px; }
+                        p, ul, ol { margin-top: 8px; margin-bottom: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; font-size: 11pt; page-break-inside: avoid;}
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top;}
+                        th { font-weight: bold; text-align: center; background: #f9f9f9;}
+                        .ttd-container { display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }
+                        .ttd-box { width: 45%; text-align: center; }
+                        .ttd-space { height: 80px; }
+                        .ttd-nama { font-weight: bold; text-decoration: underline; margin-bottom: 2px; }
+                        .page-break { page-break-before: always; }
+                    </style>
+                </head>
+                <body>
+                    ${coverHtml}
+                    <div class="kop-surat">
+                        ${identitas.logo ? `<img src="${identitas.logo}" class="kop-logo">` : ''}
+                        <div class="kop-teks">
+                            <h1>${identitas.nama_sekolah || 'NAMA SEKOLAH'}</h1>
+                            <p>${identitas.alamat || 'Alamat Sekolah'}</p>
+                        </div>
+                    </div>
+                    <div class="content">${htmlContent}</div>
+                    <script>window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 800); }<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        };
+
+        // --- GEMINI GENERATOR LOGIC ---
+        const dplCheckboxes = document.querySelectorAll('.dpl-checkbox');
+        const dplCounter = document.getElementById('dpl-counter');
+        const dplError = document.getElementById('dpl-error');
+        function updateDPLCounter() {
+            const checkedCount = document.querySelectorAll('.dpl-checkbox:checked').length;
+            dplCounter.innerText = `${checkedCount}/8 dipilih (min. 4)`;
+            if(checkedCount >= 4) { dplCounter.classList.replace('bg-red-500', 'bg-green-500'); dplError.classList.add('hidden'); } 
+            else { dplCounter.classList.replace('bg-green-500', 'bg-red-500'); }
+        }
+        dplCheckboxes.forEach(cb => cb.addEventListener('change', updateDPLCounter));
+
+        document.getElementById('generator-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const checkedDPLs = Array.from(document.querySelectorAll('.dpl-checkbox:checked')).map(cb => cb.value);
+            if(checkedDPLs.length < 4) {
+                dplError.classList.remove('hidden');
+                document.getElementById('dpl-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            const apiKey = globalSettings.gemini_api_key;
+            if (!apiKey) { showToast("API Key belum diatur.", "error"); navigate('pengaturan'); return; }
+            
+            document.getElementById('generator-empty').classList.add('hidden');
+            document.getElementById('generator-result').classList.add('hidden');
+            document.getElementById('result-actions').classList.add('hidden');
+            document.getElementById('generator-loader').classList.remove('hidden');
+            
+            const btn = document.getElementById('btn-generate');
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Merancang...';
+            
+            currentGeneratedMeta = {
+                mata_pelajaran: document.getElementById('gen-mapel').value.trim(),
+                jenjang: document.getElementById('gen-jenjang').value,
+                kelas: document.getElementById('gen-kelas').value.trim(),
+                fase: document.getElementById('gen-fase').value,
+                semester: document.getElementById('gen-semester').value || '-',
+                tahun_pelajaran: document.getElementById('gen-tahun').value.trim() || '-',
+                durasi: document.getElementById('gen-durasi').value.trim(),
+                pertemuan: document.getElementById('gen-pertemuan').value,
+                model: document.getElementById('gen-model').value || '-',
+                pendekatan: document.getElementById('gen-pendekatan').value,
+                topik: document.getElementById('gen-topik').value.trim(),
+                tujuan: document.getElementById('gen-tujuan').value.trim(),
+                dpl: checkedDPLs
+            };
+
+            let instruksiDiferensiasiInti = "";
+            let instruksiDiferensiasiMedia = "";
+            let instruksiDiferensiasiLKPD = "";
+            if (currentGeneratedMeta.pendekatan === "Berdiferensiasi" || currentGeneratedMeta.pendekatan === "TaRL") {
+                instruksiDiferensiasiInti = `
+- KELOMPOK A - Kesiapan Tinggi (~25%): Uraikan aktivitas menantang, Media/Alat, Bentuk Produk, & Durasi spesifik.
+- KELOMPOK B - Kesiapan Sedang (~50%): Uraikan aktivitas menengah terpandu, Media/Alat, Bentuk Produk, & Durasi spesifik.
+- KELOMPOK C - Perlu Dukungan (~25%): Uraikan aktivitas dasar dengan bimbingan intensif, Media/Alat, Bentuk Produk, & Durasi spesifik.`;
+                instruksiDiferensiasiMedia = `Pembagian Media Berdasarkan Kelompok:
+Kelompok A (Kesiapan Tinggi): [sebutkan]
+Kelompok B (Kesiapan Sedang): [sebutkan]
+Kelompok C (Perlu Dukungan): [sebutkan]`;
+                instruksiDiferensiasiLKPD = `Susunlah Tugas Praktik LKPD spesifik yang berbeda (Bertingkat) untuk: Tugas Kelompok A, Tugas Kelompok B, dan Tugas Kelompok C.`;
+            } else if (currentGeneratedMeta.pendekatan === "CRT") {
+                instruksiDiferensiasiInti = `
+- Aktivitas Kolaboratif CRT: JABARKAN SECARA EKSPLISIT integrasi Culturally Responsive Teaching (CRT). Kaitkan seluruh aktivitas dengan kearifan lokal, tradisi budaya setempat, atau masalah nyata di lingkungan siswa secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
+                instruksiDiferensiasiMedia = `Cantumkan rekomendasi "Media Berbasis Kearifan Lokal/Budaya" yang mendukung CRT.`;
+                instruksiDiferensiasiLKPD = `Susunlah Tugas Praktik LKPD yang menggunakan studi kasus dari lingkungan sosial, budaya, dan kearifan lokal.`;
+            } else {
+                instruksiDiferensiasiInti = `
+- Aktivitas Kolaboratif Kelas: JABARKAN SECARA EKSPLISIT aktivitas pembelajaran untuk seluruh kelas secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
+                instruksiDiferensiasiMedia = `Berikan daftar rinci media pembelajaran dan alat standar yang disarankan.`;
+                instruksiDiferensiasiLKPD = `Susunlah Pertanyaan Pemandu dan Tugas Praktik yang terstruktur untuk seluruh siswa.`;
+            }
+
+            const prompt = `Anda adalah seorang Ahli Kurikulum Nasional dan Pendidik Profesional. Buatlah Rencana Pelaksanaan Pembelajaran (RPP) / Modul Ajar yang SANGAT DETAIL, PANJANG, dan KOMPREHENSIF. JANGAN MERINGKAS POIN! Uraikan dengan kalimat lengkap!
+**ATURAN PENULISAN MATEMATIKA:**
+DILARANG KERAS menggunakan format LaTeX seperti tanda dolar tunggal ($...$) atau dolar ganda ($$...$$) untuk rumus matematika atau equation! Tuliskan rumus menggunakan teks biasa dengan rapi (misal: a^2 + b^2 = c^2, x = y / z, akar(4) = 2) agar teks dapat dicetak tanpa error rendering. JANGAN ADA TANDA DOLAR DI MATEMATIKA!
+JANGAN MEMBERIKAN KATA PENGANTAR. Mulai langsung dari judul Romawi I.
+**DATA INPUT:**
+* Mata Pelajaran: ${currentGeneratedMeta.mata_pelajaran}
+* Kelas / Fase: ${currentGeneratedMeta.kelas} / Fase ${currentGeneratedMeta.fase}
+* Jenjang: ${currentGeneratedMeta.jenjang}
+* Semester: ${currentGeneratedMeta.semester}
+* Tahun Pelajaran: ${currentGeneratedMeta.tahun_pelajaran}
+* Alokasi Waktu: ${currentGeneratedMeta.durasi}
+* Jumlah Pertemuan: ${currentGeneratedMeta.pertemuan} Pertemuan
+* Materi Pokok / Topik: ${currentGeneratedMeta.topik}
+* Model Pembelajaran: ${currentGeneratedMeta.model}
+* Pendekatan Khusus: ${currentGeneratedMeta.pendekatan}
+* Tujuan Pembelajaran: ${currentGeneratedMeta.tujuan}
+* Dimensi Profil Pelajar Pancasila: ${currentGeneratedMeta.dpl.join(', ')}
+**STRUKTUR WAJIB (Ikuti Plek/Persis seperti ini menggunakan Markdown dan tabel):**
+**I. Identitas RPM & Dimensi Profil Lulusan**
+(Sebutkan ulang Data Input di atas persis sebagai daftar poin peluru list '*'. Lalu jabarkan deskripsi pengembangan dari ke-${currentGeneratedMeta.dpl.length} Dimensi Profil Pelajar Pancasila yang dipilih).
+**II. Tujuan Pembelajaran & KKTP**
+A. TUJUAN PEMBELAJARAN (Sebutkan ulang tujuan pembelajaran).
+B. KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN (KKTP)
+(Buat Tabel Markdown dengan 6 kolom: No | Tujuan Pembelajaran | Kurang (0-40) | Cukup (41-60) | Baik (61-80) | Amat Baik (81-100). Isi detail indikator/rubrik capaiannya secara spesifik).
+Peserta didik dinyatakan telah mencapai Tujuan Pembelajaran apabila kriteria capaiannya berada pada predikat Baik (nilai 61-80) atau lebih tinggi.
+**III. Kerangka Pembelajaran**
+(Uraikan secara mendalam masing-masing 1 paragraf panjang: Praktik Pedagogis, Lingkungan Pembelajaran, Kemitraan Pembelajaran, dan Pemanfaatan Digital).
+**IV. Materi Pembelajaran**
+(Tuliskan rangkuman materi lengkap dari bab ini. Uraikan sub-bab A, B, C, dst secara PANJANG LEBAR seolah ini adalah buku cetak siswa, berikan contoh penerapannya).
+**V. Langkah-Langkah Kegiatan Pembelajaran**
+(JABARKAN SETIAP PERTEMUAN dari Pertemuan 1 sampai Pertemuan ${currentGeneratedMeta.pertemuan} SECARA TERPISAH DAN PANJANG LEBAR!)
+Setiap pertemuan wajib berisi struktur ini:
+Pertemuan ke-[X] - Materi: [Judul Sub Materi]
+A. Kegiatan Pendahuluan (10 menit)
+(Tuliskan Prinsip, Pembukaan, dan Apersepsi/Pertanyaan Pemantik)
+B. Kegiatan Inti
+- Tabel Pemetaan Sintaks Model Pembelajaran (${currentGeneratedMeta.model}) ke Pengalaman Belajar (Buat tabel: No | Sintaks/Tahap Model | Ditempatkan pada Pengalaman Belajar).
+- PENGALAMAN BELAJAR 1: MEMAHAMI (Eksplorasi Konsep). Jabarkan sintaks yang relevan (Aktivitas Guru & Siswa, Alokasi Waktu).
+- PENGALAMAN BELAJAR 2: MENGAPLIKASIKAN (Aksi Nyata). Jabarkan sintaks relevan. Di bagian ini WAJIB TERDAPAT PENGELOMPOKAN/PENDEKATAN BERIKUT:
+${instruksiDiferensiasiInti}
+- PENGALAMAN BELAJAR 3: MEREFLEKSIKAN (Evaluasi Diri). Jabarkan sintaks terkait dan minimal 3 Pertanyaan Refleksi Diri Murid.
+C. Kegiatan Penutup (10 menit)
+(Tuliskan Kesimpulan dan Tindak Lanjut tugas).
+**VI. Media & Sumber Belajar Digital**
+(Berikan daftar komprehensif terkait Template Pembelajaran, Asesmen Digital, Artikel Referensi, Video Pembelajaran).
+${instruksiDiferensiasiMedia}
+**LAMPIRAN 1: Asesmen (Penilaian)**
+A. Teknik Penilaian (Sikap: Observasi, Pengetahuan: Tes Tertulis, Keterampilan: Unjuk Kerja).
+B. Rubrik Penilaian Proyek/Diskusi (Buat Tabel Markdown dengan 5 kolom: Aspek Penilaian | Sangat Baik (4) | Baik (3) | Cukup (2) | Perlu Perbaikan (1). Buat 3 aspek penilaian).
+C. Soal Evaluasi (Pilihan Ganda) (WAJIB berikan 10 Soal Pilihan Ganda A-D yang berbobot HOTS beserta Kunci Jawabannya di akhir).
+**LAMPIRAN 2: LKPD (Lembar Kerja Peserta Didik)**
+(Tuliskan struktur LKPD detail untuk setidaknya salah satu pertemuan utama: Judul LKPD, Identitas, Tujuan, Petunjuk, Alat/Bahan, Langkah Kegiatan).
+${instruksiDiferensiasiLKPD}`;
+            
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const result = await response.json();
+                if (result.error) throw new Error(result.error.message || "Gagal menghubungkan ke Gemini");
+                if (result.candidates && result.candidates.length > 0) {
+                    currentGeneratedRPP = result.candidates[0].content.parts[0].text;
+                    document.getElementById('generator-result').innerHTML = marked.parse(currentGeneratedRPP);
+                    document.getElementById('generator-loader').classList.add('hidden');
+                    document.getElementById('generator-result').classList.remove('hidden');
+                    document.getElementById('result-actions').classList.remove('hidden');
+                    document.getElementById('result-actions').classList.add('flex');
+                    showToast("RPP berhasil di-generate!", "success");
+                }
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                document.getElementById('generator-loader').classList.add('hidden');
+                document.getElementById('generator-empty').classList.remove('hidden');
+                showToast("Error: " + error.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerHTML = originalBtnHtml;
+            }
+        });
+
+        window.saveResult = async function() {
+            if(!currentGeneratedRPP || !currentGeneratedMeta) return;
+            const btnSave = document.querySelector('#result-actions button.bg-green-600');
+            btnSave.disabled = true; btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan';
+            
+            try {
+                const res = await fetchGAS({ 
+                    action: 'saveArsip', 
+                    meta: currentGeneratedMeta, 
+                    konten_rpp: currentGeneratedRPP 
+                });
+                if(res.status === 'success') {
+                    showToast("RPP tersimpan di arsip!", "success");
+                    setTimeout(() => {
+                        document.getElementById('generator-form').reset();
+                        updateDPLCounter(); 
+                        document.getElementById('generator-result').classList.add('hidden');
+                        document.getElementById('result-actions').classList.add('hidden');
+                        document.getElementById('generator-empty').classList.remove('hidden');
+                        currentGeneratedRPP = null; currentGeneratedMeta = null;
+                        btnSave.disabled = false; btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Arsip';
+                        navigate('arsip');
+                    }, 1000);
+                } else {
+                    throw new Error("Gagal menyimpan");
+                }
+            } catch(e) { 
+                showToast("Gagal menyimpan ke database", "error"); 
+                btnSave.disabled = false; 
+                btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Arsip'; 
+            }
+        };
+
+        const swCode = `self.addEventListener('install', event => self.skipWaiting()); self.addEventListener('activate', event => event.waitUntil(clients.claim())); self.addEventListener('fetch', event => { event.respondWith(fetch(event.request).catch(() => new Response('Offline.'))); });`;
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
     </script>
 </body>
 </html>
