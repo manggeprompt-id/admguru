@@ -466,14 +466,13 @@
             <div class="ms-3 text-sm font-normal mr-2" id="toast-message">Pesan notifikasi</div>
         </div>
     </div>
-
     <script>
         // ==========================================
         // INTEGRASI GOOGLE APPS SCRIPT (MENGGANTIKAN FIREBASE)
         // ==========================================
         
         // MASUKKAN URL WEB APP GAS ANDA DI SINI
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzpIwktas5LupTpCV5k00y2cm2tEFQIWcZ1wBI3Z2l5fb4rg6qSJaMfsR0RkuUE6Ryv/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyEBewsJsUWBwHnAHxun6GqSd9cGBctYEHAJfSHLRR3mlrm7w2JtJ0RkyXv2pJ8RlED/exec"; 
         
         let globalSettings = { gemini_api_key: "", identitas: {} };
         window.currentArchiveData = [];
@@ -933,23 +932,15 @@
             let instruksiDiferensiasiMedia = "";
             let instruksiDiferensiasiLKPD = "";
             if (currentGeneratedMeta.pendekatan === "Berdiferensiasi" || currentGeneratedMeta.pendekatan === "TaRL") {
-                instruksiDiferensiasiInti = `
-- KELOMPOK A - Kesiapan Tinggi (~25%): Uraikan aktivitas menantang, Media/Alat, Bentuk Produk, & Durasi spesifik.
-- KELOMPOK B - Kesiapan Sedang (~50%): Uraikan aktivitas menengah terpandu, Media/Alat, Bentuk Produk, & Durasi spesifik.
-- KELOMPOK C - Perlu Dukungan (~25%): Uraikan aktivitas dasar dengan bimbingan intensif, Media/Alat, Bentuk Produk, & Durasi spesifik.`;
-                instruksiDiferensiasiMedia = `Pembagian Media Berdasarkan Kelompok:
-Kelompok A (Kesiapan Tinggi): [sebutkan]
-Kelompok B (Kesiapan Sedang): [sebutkan]
-Kelompok C (Perlu Dukungan): [sebutkan]`;
+                instruksiDiferensiasiInti = `\n- KELOMPOK A - Kesiapan Tinggi (~25%): Uraikan aktivitas menantang, Media/Alat, Bentuk Produk, & Durasi spesifik.\n- KELOMPOK B - Kesiapan Sedang (~50%): Uraikan aktivitas menengah terpandu, Media/Alat, Bentuk Produk, & Durasi spesifik.\n- KELOMPOK C - Perlu Dukungan (~25%): Uraikan aktivitas dasar dengan bimbingan intensif, Media/Alat, Bentuk Produk, & Durasi spesifik.`;
+                instruksiDiferensiasiMedia = `Pembagian Media Berdasarkan Kelompok:\nKelompok A (Kesiapan Tinggi): [sebutkan]\nKelompok B (Kesiapan Sedang): [sebutkan]\nKelompok C (Perlu Dukungan): [sebutkan]`;
                 instruksiDiferensiasiLKPD = `Susunlah Tugas Praktik LKPD spesifik yang berbeda (Bertingkat) untuk: Tugas Kelompok A, Tugas Kelompok B, dan Tugas Kelompok C.`;
             } else if (currentGeneratedMeta.pendekatan === "CRT") {
-                instruksiDiferensiasiInti = `
-- Aktivitas Kolaboratif CRT: JABARKAN SECARA EKSPLISIT integrasi Culturally Responsive Teaching (CRT). Kaitkan seluruh aktivitas dengan kearifan lokal, tradisi budaya setempat, atau masalah nyata di lingkungan siswa secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
+                instruksiDiferensiasiInti = `\n- Aktivitas Kolaboratif CRT: JABARKAN SECARA EKSPLISIT integrasi Culturally Responsive Teaching (CRT). Kaitkan seluruh aktivitas dengan kearifan lokal, tradisi budaya setempat, atau masalah nyata di lingkungan siswa secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
                 instruksiDiferensiasiMedia = `Cantumkan rekomendasi "Media Berbasis Kearifan Lokal/Budaya" yang mendukung CRT.`;
                 instruksiDiferensiasiLKPD = `Susunlah Tugas Praktik LKPD yang menggunakan studi kasus dari lingkungan sosial, budaya, dan kearifan lokal.`;
             } else {
-                instruksiDiferensiasiInti = `
-- Aktivitas Kolaboratif Kelas: JABARKAN SECARA EKSPLISIT aktivitas pembelajaran untuk seluruh kelas secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
+                instruksiDiferensiasiInti = `\n- Aktivitas Kolaboratif Kelas: JABARKAN SECARA EKSPLISIT aktivitas pembelajaran untuk seluruh kelas secara kolaboratif (Sertakan Aktivitas, Media/Alat, Bentuk Produk, dan Durasi).`;
                 instruksiDiferensiasiMedia = `Berikan daftar rinci media pembelajaran dan alat standar yang disarankan.`;
                 instruksiDiferensiasiLKPD = `Susunlah Pertanyaan Pemandu dan Tugas Praktik yang terstruktur untuk seluruh siswa.`;
             }
@@ -1009,7 +1000,9 @@ C. Soal Evaluasi (Pilihan Ganda) (WAJIB berikan 10 Soal Pilihan Ganda A-D yang b
 ${instruksiDiferensiasiLKPD}`;
             
             try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                // UPDATE PENTING: Mengganti nama model menjadi gemini-1.5-flash-latest sesuai error
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
