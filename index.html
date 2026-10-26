@@ -1,4 +1,4 @@
-original_html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -471,13 +471,14 @@ original_html = """<!DOCTYPE html>
             <div class="ms-3 text-sm font-normal mr-2" id="toast-message">Pesan notifikasi</div>
         </div>
     </div>
+    
     <script>
         // ==========================================
         // INTEGRASI GOOGLE APPS SCRIPT (MENGGANTIKAN FIREBASE)
         // ==========================================
         
-        // MASUKKAN URL WEB APP GAS ANDA DI SINI
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzpZ22QHi9Ov5xb9hTYbEY0IDV0v7eagV-a0jLg5qPfQe0rhKF_5Tl_e7ReV3b-19go/exec"; 
+        // KONEKSI GAS SUDAH DIMASUKKAN DI SINI
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyhlU-yntBmQzMUUhauMINOwPN10pJfALOS9yMsgIYN11dq3rr02Vh-hbYtBmFlQUE_/exec"; 
         
         let globalSettings = { gemini_api_key: "", identitas: {} };
         window.currentArchiveData = [];
@@ -772,7 +773,7 @@ original_html = """<!DOCTYPE html>
             
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             const d = new Date(); 
-            const fallbackDate = `${d.getDate()} ${monthNames[d.getMonth()} ${d.getFullYear()}`;
+            const fallbackDate = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
             
             const ttdTempat = identitas.tempat_ttd || '...................';
             const ttdTanggal = identitas.tanggal_ttd || fallbackDate;
